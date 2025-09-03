@@ -4,8 +4,8 @@
  * This module handles the MongoDB database connection using Mongoose ODM.
  * It exports a function that establishes and manages the database connection.
  * 
- * IMPORTANT SECURITY NOTE: In production, the database connection string
- * should be stored in environment variables, not hardcoded in the source code.
+ * IMPORTANT SECURITY NOTE: Database credentials are stored in environment variables,
+ * NOT hardcoded in the source code. This prevents credential exposure in version control.
  */
 
 const mongoose = require("mongoose");
@@ -27,9 +27,13 @@ const mongoose = require("mongoose");
  */
 const connectDB = async () => {
     try {
-        // MongoDB connection string format:
-        // mongodb+srv://username:password@cluster.mongodb.net/database_name
-        const connectionString = "mongodb+srv://karansingh36752:FUtTnQBSdT12djOJ@nodejsnamaste.xfmxb.mongodb.net/Trawell";
+        // Get database connection string from environment variables
+        // NEVER hardcode credentials in source code!
+        const connectionString = process.env.MONGODB_URI;
+        
+        if (!connectionString) {
+            throw new Error("MONGODB_URI environment variable is not set. Please check your .env file.");
+        }
         
         // Connect to MongoDB with connection options
         await mongoose.connect(connectionString, {
@@ -82,21 +86,27 @@ const connectDB = async () => {
 module.exports = connectDB;
 
 /**
- * PRODUCTION SECURITY CHECKLIST:
+ * SECURITY SETUP REQUIRED:
  * 
- * 1. Move database credentials to environment variables:
- *    - Create a .env file
- *    - Use process.env.MONGODB_URI
- *    - Add .env to .gitignore
- * 
- * 2. Example .env file:
+ * 1. Create a .env file in your project root:
  *    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database_name
  *    JWT_SECRET=your_jwt_secret_key_here
  * 
- * 3. Update this file to use:
- *    const connectionString = process.env.MONGODB_URI;
+ * 2. Add .env to your .gitignore file:
+ *    echo ".env" >> .gitignore
  * 
- * 4. Install dotenv package: npm install dotenv
- * 5. Load environment variables in app.js: require('dotenv').config()
+ * 3. Install dotenv package:
+ *    npm install dotenv
+ * 
+ * 4. Load environment variables in app.js:
+ *    require('dotenv').config()
+ * 
+ * 5. NEVER commit .env files to version control!
+ * 
+ * EXAMPLE .env FILE:
+ * MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/your_database
+ * JWT_SECRET=your_super_secret_jwt_key_here
+ * PORT=7777
+ * NODE_ENV=development
  */
 

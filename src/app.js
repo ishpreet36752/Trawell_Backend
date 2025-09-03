@@ -4,7 +4,13 @@
  * This file sets up the Express.js server with all necessary middleware,
  * routes, and database connection. It follows the MVC (Model-View-Controller)
  * pattern where routes handle the controller logic.
+ * 
+ * SECURITY NOTE: Environment variables are loaded first to ensure
+ * sensitive configuration is available before any other operations.
  */
+
+// Load environment variables from .env file FIRST (before any other imports)
+require('dotenv').config();
 
 // Import required Node.js modules and third-party packages
 const express = require("express");           // Web framework for Node.js
@@ -24,7 +30,7 @@ const app = express();
  */
 app.use(
   cors({
-    origin: "http://localhost:5173",         // Frontend URL - update this for production
+    origin: process.env.FRONTEND_URL || "http://localhost:5173", // Use environment variable with fallback
     credentials: true,                       // Allow cookies and authentication headers
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"], // Allowed HTTP methods
   })
@@ -71,16 +77,21 @@ connectDB()
   .then(() => {
     console.log("✅ Connected to MongoDB database successfully");
     
-    // Start the HTTP server on port 7777
-    app.listen(7777, () => {
-      console.log("🚀 Server is running on port 7777");
-      console.log("📱 Frontend can connect at: http://localhost:7777");
+    // Get port from environment variable or use default
+    const PORT = process.env.PORT || 7777;
+    
+    // Start the HTTP server on the configured port
+    app.listen(PORT, () => {
+      console.log("🚀 Server is running on port", PORT);
+      console.log("📱 Frontend can connect at:", process.env.FRONTEND_URL || `http://localhost:${PORT}`);
+      console.log("🌍 Environment:", process.env.NODE_ENV || "development");
     });
   })
   .catch((err) => {
     // If database connection fails, log the error and exit
     console.error("❌ Database connection failed:", err.message);
     console.error("💡 Please check your MongoDB connection string and network connectivity");
+    console.error("💡 Ensure MONGODB_URI environment variable is set in your .env file");
     process.exit(1); // Exit the application with error code 1
   });
 
